@@ -1,4 +1,4 @@
-name: Train and Build
+name: Train, Build and Push
 
 on: [push]
 
@@ -7,21 +7,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.9"
+      - name: Python Setup
+        uses: actions/setup-python@v4
       
-      - name: Installing the Dependencies
+      - name: Installing Requirements
         run: |
           pip install -r requirements.txt
       
-      - name: Traing the Model
+      - name: Training the Model
         run: |
           python train_model.py
       
-      - name: Building the docker container
+      - name: Building Docker Container
         run: |
-          docker build -t mlops-pract .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/mlops-test-app:latest .
       
+      - name: Login in To DockerHUB
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+      - name: Push to DockerHUB
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/mlops-test-app:latest
